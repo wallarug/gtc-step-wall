@@ -21,15 +21,17 @@ start_pixel = 70        # Start pixels
 num_steps = 16          # Number of steps
 
 # starting DMX channel for offset
-dmx_offset = 361 -1
+dmx_offset = 361 - 1
 dmx_number_channels = 48
 dmx_values = [0] * dmx_number_channels
+dmx_safety = [0] * dmx_number_channels
+dmx_safety_counter = [0] * dmx_number_channels
 
 pixels = neopixel.NeoPixel(board.GP0, num_pixels, auto_write=False)
 pixels.brightness = 0.5
 
 # Serial
-uart = busio.UART(board.GP8, board.GP9, baudrate=115200)
+uart = busio.UART(board.GP8, board.GP9, baudrate=115200) #115200
 
 # Data LEDs
 led = digitalio.DigitalInOut(board.GP15)
@@ -48,6 +50,9 @@ channels_to_steps = {
 }
 
 print("Starting")
+# Set the pixels to OFF to start
+pixels.fill((0,0,0))
+pixels.show()
 
 def update_pixels(channel):
     # work out step from the dictionary
@@ -65,7 +70,7 @@ def update_pixels(channel):
 
     # show the pixels
     pixels.show()
-    
+
 def update_all_pixels():
     # print("Step: ", step)
     for step in range(1, num_steps+1, 1):
@@ -107,17 +112,37 @@ while True:
     #pixel_step_test()
     #continue
 
+    # Send a byte of "A" or 65 to the controller to let it know
+    #  that we are ready to reieve data.
+    #uart.write(bytes("A", "ascii"))
+    #checksum = uart.read(1)
+
+    # just in case it crashes again
+    # if checksum is None:
+#         print("No Checksum")
+#         time.sleep(0.1)
+#         continue
+
+    #time.sleep(1)
+    #if ord(checksum) is not 97:
+    #    #print(checksum)
+    #    print("CHECKSUM FAILED!")
+    #    continue
+
+    # Second send is to trigger the serial data to send.
+    #uart.write(bytes("B", "ascii"))
     data = uart.read(96)
 
     if data is not None:
         led.value = True
         data_string = ''.join([chr(b) for b in data])
-        
+
         # check if we are dealing with the channel or the value
         first = True
         #print(data_string)
         for c in data_string:
-            #print(ord(c))
+            print(ord(c))
+            #print(first)
             v = ord(c) + dmx_offset
             if ord(c) == 255 or ord(c) == 0:
                 value = ord(c)
@@ -130,15 +155,20 @@ while True:
                 first = True
                 #channel_index = -1
                 continue
+            # elif ord(c) > 0 and ord(c) < 49:
+#                 channel = ord(c)+dmx_offset
+#                 channel_index = ord(c)
+#                 first = False
+#                 continue
             else:
                 channel = ord(c)+dmx_offset
                 channel_index = ord(c)
                 first = False
                 continue
-        
+
         # update all the pixels once a full stream has been processed
         update_all_pixels()
-        
+
         # fill in the pixels relevant for that channel (RGB)
         led.value = False
 
@@ -160,4 +190,3 @@ def pixel_step_test():
             pixels[i] = (255, 0, 0)
         pixels.show()
         time.sleep(5)
-
