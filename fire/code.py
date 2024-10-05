@@ -13,7 +13,7 @@ import neopixel
 import random
 import time
 
-n_leds = 432
+n_leds = 144 #432
 num_pixels = n_leds
 pixels = neopixel.NeoPixel(board.GP0, num_pixels, auto_write=False)
 pixels.brightness = 1.0
@@ -28,8 +28,8 @@ time.sleep(2)
 
 def fire_animation():
     while True:
-        rgb = (255, 42, 12)  # (255, 96, 12)
-        blue_rgb = (0, 0, 255)  # Blue color
+        rgb = (255, 72, 12)  # (255, 96, 12)
+        blue_rgb = (0, 0, 0)  # Blue color
         
         delay = random.choice(range(50, 150))/1000  #50, 150
 
@@ -37,7 +37,7 @@ def fire_animation():
             flicker = random.choice(range(40))
 
             # 5% chance to turn the LED blue instead of flickering red
-            if random.random() < 0.05:
+            if random.random() < 0.5:
                 rgb_r = blue_rgb
             else:
                 rgb_r = tuple([x - flicker if x-flicker >= 0 else 0 for x in rgb ])
